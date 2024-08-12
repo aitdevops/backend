@@ -32,12 +32,13 @@ Handles the approval process for new users, allowing them to log in after being 
 
 Make sure you have the following installed:
 
-- **Node.js** (v14 or higher)
-- **npm** (Node Package Manager)
-- **Docker** (for containerization)
-- **Docker Compose** (to run multiple containers)
+- 🟢 **Node.js** (v14 or higher)
+- 📦 **npm** (Node Package Manager)
+- 🐳 **Docker** (for containerization)
+- 🐙 **Docker Compose** (to run multiple containers)
 
 ### 🛠️ Installation
+
 
 1. **Clone the repository:**
 
