@@ -1,0 +1,19 @@
+name: Trigger CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger GitHub CI Workflow
+        run: |
+          curl -X POST \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+          https://api.github.com/repos/aitdevops/github-ci/dispatches \
+          -d '{"event_type": "backend_push"}'
