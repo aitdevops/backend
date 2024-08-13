@@ -3,7 +3,7 @@ const app = express();
 
 app.use(express.json());
 
-let users = []; // test-1
+let users = []; // 
 
 // Add a root route to respond to GET requests at '/'
 app.get('/', (req, res) => {
