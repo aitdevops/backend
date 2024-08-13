@@ -5,6 +5,11 @@ app.use(express.json());
 
 let users = []; // test-1
 
+// Add a root route to respond to GET requests at '/'
+app.get('/', (req, res) => {
+    res.status(200).send('Approval Service is running');
+});
+
 app.post('/approve/:userId', (req, res) => {
     const user = users.find(u => u.id === parseInt(req.params.userId));
     if (user) {
