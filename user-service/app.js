@@ -6,6 +6,11 @@ app.use(express.json());
 
 let users = []; // This should be replaced with a database like Cloud SQL
 
+// Add a root route to respond to GET requests at '/'
+app.get('/', (req, res) => {
+    res.status(200).send('Approval Service is running');
+});
+
 app.post('/signup', (req, res) => {
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     const newUser = {
