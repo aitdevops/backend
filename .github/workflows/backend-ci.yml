@@ -16,4 +16,4 @@ jobs:
           -H "Accept: application/vnd.github.everest-preview+json" \
           -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
           https://api.github.com/repos/aitdevops/github-ci/dispatches \
-          -d '{"event_type": "backend_push"}'
+          -d '{"event_type": "backend_push", "client_payload": {"sha": "${{ github.sha }}"}}'
