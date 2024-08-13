@@ -1,3 +1,5 @@
+# Dockerfile for Approval Service
+
 # Use an official Node.js runtime as a parent image
 FROM node:14
 
@@ -9,6 +11,9 @@ COPY package*.json ./
 
 # Install the dependencies
 RUN npm install
+
+# Verify that express is installed
+RUN ls node_modules | grep express
 
 # Copy the rest of the application code
 COPY . .
