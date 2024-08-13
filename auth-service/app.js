@@ -9,7 +9,7 @@ let users = []; // This should be replaced with a database like Cloud SQL
 
 // Add a root route to respond to GET requests at '/'
 app.get('/', (req, res) => {
-    res.status(200).send('Approval Service is running');
+    res.status(200).send('Auth Service is running');
 });
 
 app.post('/login', (req, res) => {
