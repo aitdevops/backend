@@ -3,7 +3,7 @@ const app = express();
 
 app.use(express.json());
 
-let users = []; // 
+let users = []; // test
 
 app.post('/approve/:userId', (req, res) => {
     const user = users.find(u => u.id === parseInt(req.params.userId));
