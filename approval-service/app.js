@@ -1,10 +1,9 @@
 const express = require('express');
+const { Client } = require('pg');
 const app = express();
 
 app.use(express.json());
 
-// PostgreSQL connection setup
-const { Client } = require('pg');
 const client = new Client({
     user: 'myuser',
     host: '10.253.0.3',
@@ -15,7 +14,6 @@ const client = new Client({
 
 client.connect();
 
-// Add a root route to respond to GET requests at '/'
 app.get('/', (req, res) => {
     res.status(200).send('Approval Service is running');
 });
