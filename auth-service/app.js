@@ -2,29 +2,41 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const { Pool } = require('pg');
+
 const app = express();
-
 app.use(express.json());
-app.use(cors());  // Enable CORS
+app.use(cors());
 
-let users = []; // This should be replaced with a database like Cloud SQL
+const pool = new Pool({
+    user: 'myuser',
+    host: '10.253.0.3',
+    database: 'mydatabase',
+    password: 'mypassword',
+    port: 5432,
+});
 
-// Add a root route to respond to GET requests at '/'
 app.get('/', (req, res) => {
     res.status(200).send('Auth Service is running');
 });
 
-app.post('/login', (req, res) => {
-    const user = users.find(u => u.email === req.body.email);
-    if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
-        if (user.approved) {
-            const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
-            res.json({ token });
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = userResult.rows[0];
+        if (user && bcrypt.compareSync(password, user.passwordhash)) {
+            if (user.approved) {
+                const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
+                res.json({ token });
+            } else {
+                res.status(403).json({ message: "User not approved!" });
+            }
         } else {
-            res.status(403).json({ message: "User not approved!" });
+            res.status(401).json({ message: "Invalid credentials!" });
         }
-    } else {
-        res.status(401).json({ message: "Invalid credentials!" });
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
