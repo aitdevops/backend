@@ -1,8 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
 const app = express();
 
 app.use(express.json());
+app.use(cors());  // Enable CORS
 
 let users = []; // This should be replaced with a database like Cloud SQL
 
