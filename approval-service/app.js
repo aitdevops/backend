@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS for all routes
 
-// PostgreSQL connection setup
+// PostgreSQL conection setup
 const { Client } = require('pg');
 const client = new Client({
     user: 'myuser',
