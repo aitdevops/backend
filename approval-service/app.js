@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(express.json());
-app.use(cors()); // Enable CORS for all routes.
+app.use(cors()); // Enable CORS for all routes
 
 // PostgreSQL connection setup
 const { Client } = require('pg');
