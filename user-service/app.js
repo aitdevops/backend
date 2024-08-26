@@ -40,7 +40,7 @@ app.post('/signup', async (req, res) => {
         const createdUser = result.rows[0];
 
         // Call the Cloud Function to send the approval email
-        await axios.post('https://us-central1-devops-projects-426703.cloudfunctions.net/sendApprovalEmail', {
+        await axios.post('https://us-east1-devops-projects-426703.cloudfunctions.net/sendApprovalEmail', {
             id: createdUser.id,
             username: createdUser.username,
             email: createdUser.email,
