@@ -10,8 +10,8 @@ app.use(cors());
 
 const pool = new Pool({
     user: 'myuser',
-    host: '10.253.0.3',
-    database: 'mydatabase',
+    host: 'db.aitdevops.com',
+    database: 'aitdevops-db',
     password: 'mypassword',
     port: 5432,
 });

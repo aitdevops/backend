@@ -11,8 +11,8 @@ app.use(cors()); // Enable CORS for all routes
 const { Client } = require('pg');
 const client = new Client({
     user: 'myuser',
-    host: '10.253.0.3',
-    database: 'mydatabase',
+    host: 'db.aitdevops.com',
+    database: 'aitdevops-db',
     password: 'mypassword',
     port: 5432,
 });
