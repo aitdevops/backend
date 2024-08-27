@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
 const cors = require('cors');
-const redis = require('redis'); // Add Redis
+const redis = require('redis'); // Import Redis
 const { Client } = require('pg');
 
 const app = express();
@@ -11,13 +11,19 @@ app.use(cors()); // Enable CORS for all routes
 
 // Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis-service', // Redis service name in GKE
+    host: 'redis-service',
     port: 6379,
 });
 
 redisClient.on('error', (err) => {
     console.error('Redis error:', err);
 });
+
+redisClient.on('connect', () => {
+    console.log('Connected to Redis');
+});
+
+redisClient.connect().catch(console.error); // Ensure client is connected
 
 // PostgreSQL connection setup
 const client = new Client({
@@ -35,14 +41,19 @@ app.get('/', (req, res) => {
 });
 
 app.post('/signup', async (req, res) => {
-    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-    const newUser = {
-        username: req.body.username,
-        email: req.body.email,
-        passwordHash: hashedPassword,
-    };
-
     try {
+        const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+        const newUser = {
+            username: req.body.username,
+            email: req.body.email,
+            passwordHash: hashedPassword,
+        };
+
+        // Check if Redis client is connected
+        if (!redisClient.isOpen) {
+            await redisClient.connect();
+        }
+
         const result = await client.query(
             'INSERT INTO users (username, email, passwordHash) VALUES ($1, $2, $3) RETURNING *',
             [newUser.username, newUser.email, newUser.passwordHash]
@@ -50,7 +61,10 @@ app.post('/signup', async (req, res) => {
         const createdUser = result.rows[0];
 
         // Cache the new user data in Redis
-        redisClient.set(`user_${createdUser.id}`, 3600, JSON.stringify(createdUser)); // Cache for 1 hour
+        await redisClient.set(`user_${createdUser.id}`, JSON.stringify(createdUser), 'EX', 3600).catch(err => {
+            console.error('Redis SET error:', err);
+            throw new Error('Failed to cache user data');
+        });
 
         // Call the Cloud Function to send the approval email
         await axios.post('https://us-east1-devops-projects-426703.cloudfunctions.net/sendApprovalEmail', {

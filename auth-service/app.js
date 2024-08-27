@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const redis = require('redis'); // Add Redis
+const redis = require('redis'); // Import Redis
 const { Pool } = require('pg');
 
 const app = express();
@@ -11,13 +11,19 @@ app.use(cors());
 
 // Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis-service', // Redis service name in GKE
+    host: 'redis-service',
     port: 6379,
 });
 
 redisClient.on('error', (err) => {
     console.error('Redis error:', err);
 });
+
+redisClient.on('connect', () => {
+    console.log('Connected to Redis');
+});
+
+redisClient.connect().catch(console.error); // Ensure client is connected
 
 const pool = new Pool({
     user: 'myuser',
@@ -34,6 +40,11 @@ app.get('/', (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
+        // Check if Redis client is connected
+        if (!redisClient.isOpen) {
+            await redisClient.connect();
+        }
+
         const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
         if (user && bcrypt.compareSync(password, user.passwordhash)) {
@@ -41,7 +52,10 @@ app.post('/login', async (req, res) => {
                 const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
 
                 // Cache the token in Redis
-                redisClient.set(`auth_token_${user.id}`, 3600, token); // Cache for 1 hour
+                await redisClient.set(`auth_token_${user.id}`, token, 'EX', 3600).catch(err => {
+                    console.error('Redis SET error:', err);
+                    throw new Error('Failed to cache authentication token');
+                });
 
                 res.json({ token });
             } else {

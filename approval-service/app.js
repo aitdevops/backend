@@ -1,21 +1,29 @@
+// app.js
+
 const express = require('express');
 const cors = require('cors');
-const redis = require('redis'); // Add Redis
+const redis = require('redis'); // Import Redis
 const { Client } = require('pg');
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Enable CORS for all routes
+app.use(cors());
 
 // Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis-service', // Redis service name in GKE
+    host: 'redis-service',
     port: 6379,
 });
 
 redisClient.on('error', (err) => {
     console.error('Redis error:', err);
 });
+
+redisClient.on('connect', () => {
+    console.log('Connected to Redis');
+});
+
+redisClient.connect().catch(console.error); // Ensure client is connected
 
 // PostgreSQL connection setup
 const client = new Client({
@@ -34,27 +42,33 @@ app.get('/', (req, res) => {
 
 app.get('/approve/:userId', async (req, res) => {
     const userId = parseInt(req.params.userId);
-
     try {
-        // Check if the user's approval status is already cached
-        redisClient.get(`user_approval_${userId}`, async (err, cachedApproval) => {
-            if (cachedApproval) {
-                return res.json({ message: "User approved successfully!" });
-            } else {
-                const result = await client.query(
-                    'UPDATE users SET approved = TRUE WHERE id = $1 RETURNING *',
-                    [userId]
-                );
+        // Check if Redis client is connected
+        if (!redisClient.isOpen) {
+            await redisClient.connect();
+        }
 
-                if (result.rowCount === 0) {
-                    return res.status(404).json({ message: "User not found!" });
-                }
+        const cachedApproval = await redisClient.get(`user_approval_${userId}`);
 
-                // Cache the approval status
-                redisClient.set(`user_approval_${userId}`, 3600, JSON.stringify(true)); // Cache for 1 hour
-                res.json({ message: "User approved successfully!" });
-            }
+        if (cachedApproval) {
+            return res.json({ message: "User already approved." });
+        }
+
+        const result = await client.query(
+            'UPDATE users SET approved = TRUE WHERE id = $1 RETURNING *',
+            [userId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: "User not found!" });
+        }
+
+        await redisClient.set(`user_approval_${userId}`, 'true', 'EX', 3600).catch(err => {
+            console.error('Redis SET error:', err);
+            throw new Error('Failed to cache approval status');
         });
+
+        res.json({ message: "User approved successfully!" });
     } catch (error) {
         console.error('Error approving user:', error);
         res.status(500).json({ message: "Error approving user." });
