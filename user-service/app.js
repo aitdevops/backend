@@ -70,4 +70,8 @@ app.post('/signup', async (req, res) => {
         res.status(201).json({ message: "User created, waiting for approval." });
     } catch (error) {
         console.error('Error saving user or sending approval email:', error);
-        res.st
+        res.status(500).json({ message: "Error creating user or sending approval email." });
+    }
+});
+
+app.listen(3002, () => console.log('User service listening on port 3002'));
