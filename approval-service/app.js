@@ -7,9 +7,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Redis client setup
+// Redis client setup-new
 const redisClient = redis.createClient({
-    host: 'redis.aitdevops.com', // Use the custom DNS name
+    host: 'redis.aitdevops.com',
     port: 6379,
 });
 
@@ -21,7 +21,15 @@ redisClient.on('connect', () => {
     console.log('Connected to Redis');
 });
 
-redisClient.connect().catch(console.error); // Ensure client is connected
+// Connect to Redis once during startup
+(async () => {
+    try {
+        await redisClient.connect();
+        console.log('Redis client connected');
+    } catch (err) {
+        console.error('Could not connect to Redis:', err);
+    }
+})();
 
 // PostgreSQL connection setup
 const client = new Client({
@@ -41,11 +49,6 @@ app.get('/', (req, res) => {
 app.get('/approve/:userId', async (req, res) => {
     const userId = parseInt(req.params.userId);
     try {
-        // Check if Redis client is connected
-        if (!redisClient.isOpen) {
-            await redisClient.connect();
-        }
-
         const cachedApproval = await redisClient.get(`user_approval_${userId}`);
 
         if (cachedApproval) {
@@ -61,7 +64,9 @@ app.get('/approve/:userId', async (req, res) => {
             return res.status(404).json({ message: "User not found!" });
         }
 
-        await redisClient.set(`user_approval_${userId}`, 'true', 'EX', 3600).catch(err => {
+        await redisClient.set(`user_approval_${userId}`, 'true', {
+            EX: 3600,
+        }).catch(err => {
             console.error('Redis SET error:', err);
             throw new Error('Failed to cache approval status');
         });

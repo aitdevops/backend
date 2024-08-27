@@ -9,9 +9,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Redis client setup
+// Redis client setup-new
 const redisClient = redis.createClient({
-    host: 'redis.aitdevops.com', // Use the custom DNS name
+    host: 'redis.aitdevops.com',
     port: 6379,
 });
 
@@ -23,7 +23,15 @@ redisClient.on('connect', () => {
     console.log('Connected to Redis');
 });
 
-redisClient.connect().catch(console.error); // Ensure client is connected
+// Connect to Redis once during startup
+(async () => {
+    try {
+        await redisClient.connect();
+        console.log('Redis client connected');
+    } catch (err) {
+        console.error('Could not connect to Redis:', err);
+    }
+})();
 
 const pool = new Pool({
     user: 'myuser',
@@ -40,19 +48,15 @@ app.get('/', (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        // Check if Redis client is connected
-        if (!redisClient.isOpen) {
-            await redisClient.connect();
-        }
-
         const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
         if (user && bcrypt.compareSync(password, user.passwordhash)) {
             if (user.approved) {
                 const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
 
-                // Cache the token in Redis
-                await redisClient.set(`auth_token_${user.id}`, token, 'EX', 3600).catch(err => {
+                await redisClient.set(`auth_token_${user.id}`, token, {
+                    EX: 3600,
+                }).catch(err => {
                     console.error('Redis SET error:', err);
                     throw new Error('Failed to cache authentication token');
                 });
