@@ -9,7 +9,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "pg": "^8.7.1"
+    "pg": "^8.7.1",
+    "redis" : "^4.7.0" 
   },
   "author": "Rajeev Kumar Koppisetti",
   "license": "ISC"
