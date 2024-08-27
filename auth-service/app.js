@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const redis = require('redis'); // Import Redis
+const redis = require('redis');
 const { Pool } = require('pg');
 
 const app = express();
@@ -11,7 +11,7 @@ app.use(cors());
 
 // Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis-service',
+    host: 'redis.aitdevops.com', // Use the custom DNS name
     port: 6379,
 });
 

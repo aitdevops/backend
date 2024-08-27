@@ -1,8 +1,6 @@
-// app.js
-
 const express = require('express');
 const cors = require('cors');
-const redis = require('redis'); // Import Redis
+const redis = require('redis');
 const { Client } = require('pg');
 
 const app = express();
@@ -11,7 +9,7 @@ app.use(cors());
 
 // Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis-service',
+    host: 'redis.aitdevops.com', // Use the custom DNS name
     port: 6379,
 });
 
