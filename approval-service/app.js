@@ -51,7 +51,7 @@ app.get('/approve/:userId', async (req, res) => {
                 }
 
                 // Cache the approval status
-                redisClient.setex(`user_approval_${userId}`, 3600, JSON.stringify(true)); // Cache for 1 hour
+                redisClient.set(`user_approval_${userId}`, 3600, JSON.stringify(true)); // Cache for 1 hour
                 res.json({ message: "User approved successfully!" });
             }
         });

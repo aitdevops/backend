@@ -50,7 +50,7 @@ app.post('/signup', async (req, res) => {
         const createdUser = result.rows[0];
 
         // Cache the new user data in Redis
-        redisClient.setex(`user_${createdUser.id}`, 3600, JSON.stringify(createdUser)); // Cache for 1 hour
+        redisClient.set(`user_${createdUser.id}`, 3600, JSON.stringify(createdUser)); // Cache for 1 hour
 
         // Call the Cloud Function to send the approval email
         await axios.post('https://us-east1-devops-projects-426703.cloudfunctions.net/sendApprovalEmail', {

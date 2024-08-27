@@ -41,7 +41,7 @@ app.post('/login', async (req, res) => {
                 const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
 
                 // Cache the token in Redis
-                redisClient.setex(`auth_token_${user.id}`, 3600, token); // Cache for 1 hour
+                redisClient.set(`auth_token_${user.id}`, 3600, token); // Cache for 1 hour
 
                 res.json({ token });
             } else {
