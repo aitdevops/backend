@@ -7,29 +7,20 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Redis client setup-new
+// Redis client setup
 const redisClient = redis.createClient({
-    host: 'redis.aitdevops.com',
-    port: 6379,
+    url: 'redis://redis.aitdevops.com:6379'
 });
 
 redisClient.on('error', (err) => {
     console.error('Redis error:', err);
 });
 
-redisClient.on('connect', () => {
+redisClient.on('connect', async () => {
     console.log('Connected to Redis');
 });
 
-// Connect to Redis once during startup
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log('Redis client connected');
-    } catch (err) {
-        console.error('Could not connect to Redis:', err);
-    }
-})();
+redisClient.connect().catch(console.error);
 
 // PostgreSQL connection setup
 const client = new Client({
