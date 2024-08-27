@@ -2,11 +2,22 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const redis = require('redis'); // Add Redis
 const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// Redis client setup
+const redisClient = redis.createClient({
+    host: 'redis-service', // Redis service name in GKE
+    port: 6379,
+});
+
+redisClient.on('error', (err) => {
+    console.error('Redis error:', err);
+});
 
 const pool = new Pool({
     user: 'myuser',
@@ -28,6 +39,10 @@ app.post('/login', async (req, res) => {
         if (user && bcrypt.compareSync(password, user.passwordhash)) {
             if (user.approved) {
                 const token = jwt.sign({ id: user.id }, 'your_secret_key', { expiresIn: '1h' });
+
+                // Cache the token in Redis
+                redisClient.setex(`auth_token_${user.id}`, 3600, token); // Cache for 1 hour
+
                 res.json({ token });
             } else {
                 res.status(403).json({ message: "User not approved!" });

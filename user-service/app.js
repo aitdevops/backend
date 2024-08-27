@@ -2,13 +2,24 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const axios = require('axios');
 const cors = require('cors');
-const app = express();
+const redis = require('redis'); // Add Redis
+const { Client } = require('pg');
 
+const app = express();
 app.use(express.json());
 app.use(cors()); // Enable CORS for all routes
 
+// Redis client setup
+const redisClient = redis.createClient({
+    host: 'redis-service', // Redis service name in GKE
+    port: 6379,
+});
+
+redisClient.on('error', (err) => {
+    console.error('Redis error:', err);
+});
+
 // PostgreSQL connection setup
-const { Client } = require('pg');
 const client = new Client({
     user: 'myuser',
     host: 'db.aitdevops.com',
@@ -19,7 +30,6 @@ const client = new Client({
 
 client.connect();
 
-// Add a root route to respond to GET requests at '/'
 app.get('/', (req, res) => {
     res.status(200).send('User Service is running');
 });
@@ -38,6 +48,9 @@ app.post('/signup', async (req, res) => {
             [newUser.username, newUser.email, newUser.passwordHash]
         );
         const createdUser = result.rows[0];
+
+        // Cache the new user data in Redis
+        redisClient.setex(`user_${createdUser.id}`, 3600, JSON.stringify(createdUser)); // Cache for 1 hour
 
         // Call the Cloud Function to send the approval email
         await axios.post('https://us-east1-devops-projects-426703.cloudfunctions.net/sendApprovalEmail', {
