@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Redis client setup
+// Redis client setup.
 const redisClient = redis.createClient({
     url: 'redis://redis.aitdevops.com:6379'
 });
